@@ -1,9 +1,9 @@
-D:\Y3S2\PAF\LearnLinkBackend\learnlink\src\main\java\com\example\learnlink\controller\AuthController.java
-D:\Y3S2\PAF\LearnLinkBackend\learnlink\src\main\java\com\example\learnlink\controller\SkillController.java
-D:\Y3S2\PAF\LearnLinkBackend\learnlink\src\main\java\com\example\learnlink\LearnlinkApplication.java
-D:\Y3S2\PAF\LearnLinkBackend\learnlink\src\main\java\com\example\learnlink\model\Skill.java
-D:\Y3S2\PAF\LearnLinkBackend\learnlink\src\main\java\com\example\learnlink\model\User.java
-D:\Y3S2\PAF\LearnLinkBackend\learnlink\src\main\java\com\example\learnlink\repository\SkillRepository.java
-D:\Y3S2\PAF\LearnLinkBackend\learnlink\src\main\java\com\example\learnlink\repository\UserRepository.java
-D:\Y3S2\PAF\LearnLinkBackend\learnlink\src\main\java\com\example\learnlink\security\SecurityConfig.java
-D:\Y3S2\PAF\LearnLinkBackend\learnlink\src\main\java\com\example\learnlink\service\JwtService.java
+C:\Academic\Year3 sem 2\PAF-FINAL-PROJECT\Learnlink-Backend\Backend-LearnLink\learnlink\src\main\java\com\example\learnlink\controller\AuthController.java
+C:\Academic\Year3 sem 2\PAF-FINAL-PROJECT\Learnlink-Backend\Backend-LearnLink\learnlink\src\main\java\com\example\learnlink\controller\SkillController.java
+C:\Academic\Year3 sem 2\PAF-FINAL-PROJECT\Learnlink-Backend\Backend-LearnLink\learnlink\src\main\java\com\example\learnlink\LearnlinkApplication.java
+C:\Academic\Year3 sem 2\PAF-FINAL-PROJECT\Learnlink-Backend\Backend-LearnLink\learnlink\src\main\java\com\example\learnlink\model\Skill.java
+C:\Academic\Year3 sem 2\PAF-FINAL-PROJECT\Learnlink-Backend\Backend-LearnLink\learnlink\src\main\java\com\example\learnlink\model\User.java
+C:\Academic\Year3 sem 2\PAF-FINAL-PROJECT\Learnlink-Backend\Backend-LearnLink\learnlink\src\main\java\com\example\learnlink\repository\SkillRepository.java
+C:\Academic\Year3 sem 2\PAF-FINAL-PROJECT\Learnlink-Backend\Backend-LearnLink\learnlink\src\main\java\com\example\learnlink\repository\UserRepository.java
+C:\Academic\Year3 sem 2\PAF-FINAL-PROJECT\Learnlink-Backend\Backend-LearnLink\learnlink\src\main\java\com\example\learnlink\security\SecurityConfig.java
+C:\Academic\Year3 sem 2\PAF-FINAL-PROJECT\Learnlink-Backend\Backend-LearnLink\learnlink\src\main\java\com\example\learnlink\service\JwtService.java
