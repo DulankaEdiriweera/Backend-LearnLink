@@ -4,6 +4,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -12,7 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+//import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -102,20 +103,20 @@ public class SkillController {
         }
 
         // Set updated title and description
-    skill.setTitle(title);
-    skill.setDescription(description);
+        skill.setTitle(title);
+        skill.setDescription(description);
 
-    // If a new file is provided, save it and update imageUrl
-    if (file != null && !file.isEmpty()) {
-        String uploadDir = "uploads/";
-        Files.createDirectories(Paths.get(uploadDir));
+        // If a new file is provided, save it and update imageUrl
+        if (file != null && !file.isEmpty()) {
+            String uploadDir = "uploads/";
+            Files.createDirectories(Paths.get(uploadDir));
 
-        String filePath = uploadDir + file.getOriginalFilename();
-        Path path = Paths.get(filePath);
-        Files.write(path, file.getBytes());
+            String filePath = uploadDir + file.getOriginalFilename();
+            Path path = Paths.get(filePath);
+            Files.write(path, file.getBytes());
 
-        skill.setImageUrl(filePath);
-    }
+            skill.setImageUrl(filePath);
+        }
 
         Skill updatedSkill = skillRepository.save(skill);
 
@@ -140,6 +141,42 @@ public class SkillController {
         skillRepository.delete(skill);
 
         return ResponseEntity.ok("Skill deleted successfully");
+    }
+
+    @PutMapping("/{id}/like")
+    public ResponseEntity<?> likeOrUnlikeSkill(@RequestHeader("Authorization") String token, @PathVariable Long id) {
+        String jwt = token.substring(7);
+        String email = jwtService.extractUsername(jwt);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Skill skill = skillRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Skill not found"));
+
+        boolean liked;
+        if (skill.getLikedUsers().contains(user)) {
+            skill.getLikedUsers().remove(user); // Unlike
+            liked = false;
+        } else {
+            skill.getLikedUsers().add(user); // Like
+            liked = true;
+        }
+
+        skillRepository.save(skill);
+
+        return ResponseEntity.ok().body(Map.of(
+                "liked", liked,
+                "likeCount", skill.getLikedUsers().size(),
+                "userEmail", user.getEmail()));
+    }
+
+    @GetMapping("/{id}/liked-users")
+    public ResponseEntity<?> getLikedUsers(@PathVariable Long id) {
+        Skill skill = skillRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Skill not found"));
+
+        return ResponseEntity.ok(skill.getLikedUsers());
     }
 
 }
