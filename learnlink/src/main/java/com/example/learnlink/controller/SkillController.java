@@ -83,9 +83,11 @@ public class SkillController {
         return ResponseEntity.ok(skillRepository.findAll());
     }
 
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> updateSkill(@RequestHeader("Authorization") String token, @PathVariable Long id,
-            @RequestBody Skill skillRequest) {
+            @RequestParam("title") String title,
+            @RequestParam("description") String description,
+            @RequestParam(value = "file", required = false) MultipartFile file) throws java.io.IOException {
         String jwt = token.substring(7);
         String email = jwtService.extractUsername(jwt);
 
@@ -99,9 +101,21 @@ public class SkillController {
             return ResponseEntity.status(403).body("You can only edit your own skills");
         }
 
-        skill.setTitle(skillRequest.getTitle());
-        skill.setDescription(skillRequest.getDescription());
-        skill.setImageUrl(skillRequest.getImageUrl());
+        // Set updated title and description
+    skill.setTitle(title);
+    skill.setDescription(description);
+
+    // If a new file is provided, save it and update imageUrl
+    if (file != null && !file.isEmpty()) {
+        String uploadDir = "uploads/";
+        Files.createDirectories(Paths.get(uploadDir));
+
+        String filePath = uploadDir + file.getOriginalFilename();
+        Path path = Paths.get(filePath);
+        Files.write(path, file.getBytes());
+
+        skill.setImageUrl(filePath);
+    }
 
         Skill updatedSkill = skillRepository.save(skill);
 
