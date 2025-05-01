@@ -3,6 +3,7 @@ package com.example.learnlink.controller;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -13,16 +14,20 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 //import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 
+import com.example.learnlink.model.Comment;
+import com.example.learnlink.model.CommentRequest;
 import com.example.learnlink.model.Skill;
 import com.example.learnlink.model.User;
+import com.example.learnlink.repository.CommentRepository;
 import com.example.learnlink.repository.SkillRepository;
 import com.example.learnlink.repository.UserRepository;
 import com.example.learnlink.service.JwtService;
@@ -177,6 +182,39 @@ public class SkillController {
                 .orElseThrow(() -> new RuntimeException("Skill not found"));
 
         return ResponseEntity.ok(skill.getLikedUsers());
+    }
+
+    @Autowired
+    private CommentRepository commentRepository;
+
+    @PostMapping("/{id}/comments")
+    public ResponseEntity<?> addComment(@RequestHeader("Authorization") String token,
+            @PathVariable Long id,
+             @RequestBody CommentRequest commentRequest) {
+        String jwt = token.substring(7);
+        String email = jwtService.extractUsername(jwt);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Skill skill = skillRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Skill not found"));
+
+        Comment comment = new Comment();
+        comment.setText(commentRequest.getText());
+        comment.setCreatedAt(LocalDateTime.now());
+        comment.setSkill(skill);
+        comment.setUser(user);
+
+        Comment savedComment = commentRepository.save(comment);
+
+        return ResponseEntity.ok(savedComment);
+    }
+
+    @GetMapping("/{id}/comments")
+    public ResponseEntity<List<Comment>> getComments(@PathVariable Long id) {
+        List<Comment> comments = commentRepository.findBySkillId(id);
+        return ResponseEntity.ok(comments);
     }
 
 }
