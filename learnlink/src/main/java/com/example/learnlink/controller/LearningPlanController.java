@@ -7,6 +7,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.MediaType;
@@ -170,5 +171,44 @@ public class LearningPlanController {
 
         learningPlanRepository.delete(learningPlan);
         return ResponseEntity.ok("Learning Plan deleted successfully");
+    }
+
+    // Like or Unlike a Learning Plan
+    @PutMapping("/{id}/like")
+    public ResponseEntity<?> likeOrUnlikeLearningPlan(@RequestHeader("Authorization") String token,
+            @PathVariable Long id) {
+        String jwt = token.substring(7);
+        String email = jwtService.extractUsername(jwt);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        LearningPlan learningPlan = learningPlanRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Learning Plan not found"));
+
+        boolean liked;
+        if (learningPlan.getLikedUsers().contains(user)) {
+            learningPlan.getLikedUsers().remove(user); // Unlike
+            liked = false;
+        } else {
+            learningPlan.getLikedUsers().add(user); // Like
+            liked = true;
+        }
+
+        learningPlanRepository.save(learningPlan);
+
+        return ResponseEntity.ok().body(Map.of(
+                "liked", liked,
+                "likeCount", learningPlan.getLikedUsers().size(),
+                "userEmail", user.getEmail()));
+    }
+
+    // Get all users who liked a Learning Plan
+    @GetMapping("/{id}/liked-users")
+    public ResponseEntity<?> getLikedUsers(@PathVariable Long id) {
+        LearningPlan learningPlan = learningPlanRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Learning Plan not found"));
+
+        return ResponseEntity.ok(learningPlan.getLikedUsers());
     }
 }
