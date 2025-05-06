@@ -5,11 +5,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,8 +27,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.example.learnlink.model.LearningPlan;
+import com.example.learnlink.model.PlanComment;
+import com.example.learnlink.model.PlanCommentRequest;
 import com.example.learnlink.model.User;
 import com.example.learnlink.repository.LearningPlanRepository;
+import com.example.learnlink.repository.PlanCommentRepository;
 import com.example.learnlink.repository.UserRepository;
 import com.example.learnlink.service.JwtService;
 import io.jsonwebtoken.io.IOException;
@@ -211,4 +217,38 @@ public class LearningPlanController {
 
         return ResponseEntity.ok(learningPlan.getLikedUsers());
     }
+
+    @Autowired
+    private PlanCommentRepository planCommentRepository;
+
+    @PostMapping("/{id}/comments")
+    public ResponseEntity<?> addComment(@RequestHeader("Authorization") String token,
+            @PathVariable Long id,
+            @RequestBody PlanCommentRequest commentRequest) {
+        String jwt = token.substring(7);
+        String email = jwtService.extractUsername(jwt);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        LearningPlan learningPlan = learningPlanRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Learning Plan not found"));
+
+        PlanComment comment = new PlanComment();
+        comment.setText(commentRequest.getText());
+        comment.setCreatedAt(LocalDateTime.now());
+        comment.setLearningPlan(learningPlan);
+        comment.setUser(user);
+
+        PlanComment savedComment = planCommentRepository.save(comment);
+
+        return ResponseEntity.ok(savedComment);
+    }
+
+    @GetMapping("/{id}/comments")
+    public ResponseEntity<List<PlanComment>> getComments(@PathVariable Long id) {
+        List<PlanComment> comments = planCommentRepository.findByLearningPlanId(id);
+        return ResponseEntity.ok(comments);
+    }
+
 }
