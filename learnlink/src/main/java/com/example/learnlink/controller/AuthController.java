@@ -51,6 +51,7 @@ public class AuthController {
         response.put("token", token);
         response.put("email", user.getEmail()); // Add email to the response
         response.put("username", user.getUsername());
+        response.put("id",user.getId());
         return ResponseEntity.ok(response);
     }
 
