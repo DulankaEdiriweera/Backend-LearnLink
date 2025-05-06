@@ -41,12 +41,6 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
 
-    @PostMapping("/{id}/follow")
-    public ResponseEntity<String> followOrUnfollowUser(@PathVariable Long id,
-            @RequestHeader("Authorization") String token) {
-        String result = userService.followOrUnfollowUser(id, token);
-        return ResponseEntity.ok(result);
-    }
 
     @GetMapping("/me")
     public ResponseEntity<?> getLoggedInUser(@RequestHeader("Authorization") String token) {

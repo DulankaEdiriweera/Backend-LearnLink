@@ -40,15 +40,4 @@ public class User {
     private String profilePic;
     private String backgroundImg;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "user_followers",
-        joinColumns = @JoinColumn(name = "user_id"),
-        inverseJoinColumns = @JoinColumn(name = "follower_id")
-    )
-    private Set<User> followers = new HashSet<>();
-
-    // Users this user follows
-    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "followers")
-    private Set<User> following = new HashSet<>();
 }
