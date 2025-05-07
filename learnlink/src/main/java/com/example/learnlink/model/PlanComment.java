@@ -19,6 +19,8 @@ public class PlanComment {
 
     private LocalDateTime createdAt;
 
+    private LocalDateTime updatedAt;
+
     @ManyToOne
     @JoinColumn(name = "learning_plan_id")
     @JsonBackReference
@@ -28,4 +30,5 @@ public class PlanComment {
     @JoinColumn(name = "user_id")
     @JsonIgnoreProperties({ "learning-plans", "comments", "password" })
     private User user;
+
 }
