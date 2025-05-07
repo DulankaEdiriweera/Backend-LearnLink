@@ -190,7 +190,7 @@ public class SkillController {
     @PostMapping("/{id}/comments")
     public ResponseEntity<?> addComment(@RequestHeader("Authorization") String token,
             @PathVariable Long id,
-             @RequestBody CommentRequest commentRequest) {
+            @RequestBody CommentRequest commentRequest) {
         String jwt = token.substring(7);
         String email = jwtService.extractUsername(jwt);
 
@@ -215,6 +215,54 @@ public class SkillController {
     public ResponseEntity<List<Comment>> getComments(@PathVariable Long id) {
         List<Comment> comments = commentRepository.findBySkillId(id);
         return ResponseEntity.ok(comments);
+    }
+
+    @PutMapping("/comments/{commentId}")
+    public ResponseEntity<?> updateComment(
+            @RequestHeader("Authorization") String token,
+            @PathVariable Long commentId,
+            @RequestBody CommentRequest updatedRequest) {
+
+        String jwt = token.substring(7);
+        String email = jwtService.extractUsername(jwt);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("Comment not found"));
+
+        if (!comment.getUser().getId().equals(user.getId())) {
+            return ResponseEntity.status(403).body("You can only edit your own comments");
+        }
+
+        comment.setText(updatedRequest.getText());
+        commentRepository.save(comment);
+
+        return ResponseEntity.ok(comment);
+    }
+
+    @DeleteMapping("/comments/{commentId}")
+    public ResponseEntity<?> deleteComment(
+            @RequestHeader("Authorization") String token,
+            @PathVariable Long commentId) {
+
+        String jwt = token.substring(7);
+        String email = jwtService.extractUsername(jwt);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("Comment not found"));
+
+        if (!comment.getUser().getId().equals(user.getId())) {
+            return ResponseEntity.status(403).body("You can only delete your own comments");
+        }
+
+        commentRepository.delete(comment);
+
+        return ResponseEntity.ok("Comment deleted successfully");
     }
 
 }
