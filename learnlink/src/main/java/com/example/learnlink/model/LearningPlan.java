@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Data
@@ -39,6 +40,10 @@ public class LearningPlan {
 
     @Temporal(TemporalType.DATE)
     private Date endDate;
+
+    @CreationTimestamp
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date createdAt;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
