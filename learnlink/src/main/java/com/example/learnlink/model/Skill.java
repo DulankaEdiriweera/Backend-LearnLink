@@ -1,5 +1,6 @@
 package com.example.learnlink.model;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -18,6 +19,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
 import lombok.Data;
 
 @Entity
@@ -32,6 +34,12 @@ public class Skill {
     private String title;
     private String description;
     private String imageUrl;
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 
     @ManyToOne
     @JoinColumn(name = "user_id")
