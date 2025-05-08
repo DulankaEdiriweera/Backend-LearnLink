@@ -161,22 +161,39 @@ public class LearningProgressController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteLearningProgress(@RequestHeader("Authorization") String token, @PathVariable Long id) {
-        String jwt = token.substring(7);
-        String email = jwtService.extractUsername(jwt);
+        try {
+            String jwt = token.substring(7);
+            String email = jwtService.extractUsername(jwt);
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-        LearningProgress progress = learningProgressRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Learning progress not found"));
+            LearningProgress progress = learningProgressRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Learning progress not found"));
 
-        if (!progress.getUser().getId().equals(user.getId())) {
-            return ResponseEntity.status(403).body("You can only delete your own learning progress updates");
+            if (!progress.getUser().getId().equals(user.getId())) {
+                return ResponseEntity.status(403).body("You can only delete your own learning progress updates");
+            }
+
+            // First delete all comments associated with this learning progress
+            List<ProgressComment> comments = progressCommentRepository.findByLearningProgressId(id);
+            for (ProgressComment comment : comments) {
+                progressCommentRepository.delete(comment);
+            }
+
+            // Clear the liked users relationship
+            progress.getLikedUsers().clear();
+            learningProgressRepository.save(progress);
+
+            // Now delete the learning progress
+            learningProgressRepository.delete(progress);
+
+            return ResponseEntity.ok("Learning progress deleted successfully");
+        } catch (Exception e) {
+            // Add proper error logging
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error deleting learning progress: " + e.getMessage());
         }
-
-        learningProgressRepository.delete(progress);
-
-        return ResponseEntity.ok("Learning progress deleted successfully");
     }
 
     @PutMapping("/{id}/like")
