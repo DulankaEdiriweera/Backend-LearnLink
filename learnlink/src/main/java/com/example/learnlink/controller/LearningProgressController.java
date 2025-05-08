@@ -3,9 +3,11 @@ package com.example.learnlink.controller;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -20,8 +23,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.MediaType;
 
 import com.example.learnlink.model.LearningProgress;
+import com.example.learnlink.model.ProgressComment;
+import com.example.learnlink.model.ProgressCommentRequest;
 import com.example.learnlink.model.User;
 import com.example.learnlink.repository.LearningProgressRepository;
+import com.example.learnlink.repository.ProgressCommentRepository;
 import com.example.learnlink.repository.UserRepository;
 import com.example.learnlink.service.JwtService;
 import org.springframework.web.multipart.MultipartFile;
@@ -38,6 +44,9 @@ public class LearningProgressController {
     private final LearningProgressRepository learningProgressRepository;
     private final UserRepository userRepository;
     private final JwtService jwtService;
+    
+    @Autowired
+    private ProgressCommentRepository progressCommentRepository;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createLearningProgress(
@@ -204,5 +213,88 @@ public class LearningProgressController {
                 .orElseThrow(() -> new RuntimeException("Learning progress not found"));
 
         return ResponseEntity.ok(progress.getLikedUsers());
+    }
+    
+    // Comment methods
+    
+    @PostMapping("/{id}/comments")
+    public ResponseEntity<?> addComment(
+            @RequestHeader("Authorization") String token,
+            @PathVariable Long id,
+            @RequestBody ProgressCommentRequest commentRequest) {
+        
+        String jwt = token.substring(7);
+        String email = jwtService.extractUsername(jwt);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        LearningProgress learningProgress = learningProgressRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Learning progress not found"));
+
+        ProgressComment comment = new ProgressComment();
+        comment.setText(commentRequest.getText());
+        comment.setCreatedAt(LocalDateTime.now());
+        comment.setLearningProgress(learningProgress);
+        comment.setUser(user);
+
+        ProgressComment savedComment = progressCommentRepository.save(comment);
+
+        return ResponseEntity.ok(savedComment);
+    }
+
+    @GetMapping("/{id}/comments")
+    public ResponseEntity<List<ProgressComment>> getComments(@PathVariable Long id) {
+        List<ProgressComment> comments = progressCommentRepository.findByLearningProgressId(id);
+        return ResponseEntity.ok(comments);
+    }
+
+    @PutMapping("/comments/{commentId}")
+    public ResponseEntity<?> updateComment(
+            @RequestHeader("Authorization") String token,
+            @PathVariable Long commentId,
+            @RequestBody ProgressCommentRequest updatedRequest) {
+
+        String jwt = token.substring(7);
+        String email = jwtService.extractUsername(jwt);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        ProgressComment comment = progressCommentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("Comment not found"));
+
+        if (!comment.getUser().getId().equals(user.getId())) {
+            return ResponseEntity.status(403).body("You can only edit your own comments");
+        }
+
+        comment.setText(updatedRequest.getText());
+        progressCommentRepository.save(comment);
+
+        return ResponseEntity.ok(comment);
+    }
+
+    @DeleteMapping("/comments/{commentId}")
+    public ResponseEntity<?> deleteComment(
+            @RequestHeader("Authorization") String token,
+            @PathVariable Long commentId) {
+
+        String jwt = token.substring(7);
+        String email = jwtService.extractUsername(jwt);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        ProgressComment comment = progressCommentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("Comment not found"));
+
+        // Check if the user is the owner of the comment or the owner of the learning progress
+        if (!comment.getUser().getId().equals(user.getId()) && 
+            !comment.getLearningProgress().getUser().getId().equals(user.getId())) {
+            return ResponseEntity.status(403).body("You can only delete your own comments or comments on your learning progress");
+        }
+
+        progressCommentRepository.delete(comment);
+        return ResponseEntity.ok("Comment deleted successfully");
     }
 }
